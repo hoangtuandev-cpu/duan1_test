@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Khách Sạn Sang Trọng - Quản Lý Đặt Phòng</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<style>
+  /* Reset & base */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; 
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #f1f5f9;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: 64px 1fr auto;
+  }
+
+  a {
+    color: #cbd5e1;
+    text-decoration: none;
+  }
+  a:hover, a:focus {
+    color: #64748b;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #64748b;
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  /* Header */
+  header {
+    grid-row: 1;
+    position: sticky;
+    top: 0;
+    height: 64px;
+    backdrop-filter: blur(16px);
+    background: rgba(30, 41, 59, 0.8);
+    border-bottom: 1px solid rgba(148,163,184,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 1500;
+  }
+  header .logo {
+    font-weight: 800;
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    letter-spacing: 2px;
+    color: #6366f1;
+    user-select: none;
+  }
+  header nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  header button {
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  header button:hover, header button:focus {
+    background: rgba(147, 197, 253, 0.3);
+    outline: none;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    grid-row: 2;
+    background: rgba(51, 65, 85, 0.95);
+    backdrop-filter: blur(20px);
+    width: 280px;
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    border-right: 1px solid rgba(148,163,184,0.1);
+    position: relative;
+    z-index: 1000;
+  }
+  .sidebar h2 {
+    margin: 0 0 12px 24px;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #a5b4fc;
+    user-select: none;
+  }
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav-list li {
+    margin: 0;
+  }
+  .nav-list button {
+    background: transparent;
+    border: none;
+    width: 100%;
+    color: #cbd5e1;
+    font-size: 1rem;
+    text-align: left;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  .nav-list button:hover, .nav-list button:focus, .nav-list button.active {
+    background: #6366f1aa;
+    color: white;
+    outline: none;
+  }
+  .material-icons {
+    font-size: 20px;
+  }
+  /* Notification badge */
+  .badge {
+    margin-left: auto;
+    background: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    min-width: 24px;
+    text-align: center;
+    user-select: none;
+  }
+
+  /* Main content */
+  main {
+    grid-row: 2;
+    flex-grow: 1;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(24px);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 24px 32px;
+  }
+  .page-title {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 800;
+    margin-bottom: 24px;
+    color: #e0e7ff;
+    text-shadow: 0 2px 10px rgba(99, 102, 241, 0.7);
+    user-select: none;
+  }
+
+  /* Footer */
+  footer {
+    grid-row: 3;
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(16px);
+    padding: 16px 24px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    user-select: none;
+  }
+
+  /* Responsive layout */
+  .app-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: calc(100vh - 64px);
+  }
+
+  /* Mobile sidebar overlay */
+  @media (max-width:1023px) {
+    .app-container {
+      grid-template-columns: 0 1fr;
+      position: relative;
+    }
+    .sidebar {
+      position: fixed;
+      top: 64px;
+      bottom: 0;
+      left: -280px;
+      width: 280px;
+      transition: left 0.3s ease;
+      height: calc(100vh - 64px);
+      z-index: 2000;
+      box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+    }
+    .sidebar.open {
+      left: 0;
+    }
+    main {
+      padding: 24px 16px;
+      overflow-y: auto;
+    }
+  }
+
+  /* Forms and cards */
+  .card {
+    background: rgba(51, 65, 85, 0.75);
+    border-radius: 16px;
+    padding: 20px 24px;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    margin-bottom: 32px;
+  }
+  .card h3 {
+    margin: 0 0 16px 0;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #c7d2fe;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .form-group label {
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 1rem;
+    border: none;
+    background: #1e293b;
+    color: #e0e7ff;
+    box-shadow: inset 0 0 5px #475569;
+    transition: box-shadow 0.3s ease;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    box-shadow: 0 0 8px #6366f1;
+  }
+  .input-error {
+    border: 2px solid #ef4444 !important;
+  }
+  .error-message {
+    color: #f87171;
+    font-size: 0.875rem;
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+  }
+  button.btn {
+    background: #6366f1;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 14px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px #6366f1cc;
+    transition: background-color 0.3s ease;
+  }
+  button.btn:hover, button.btn:focus {
+    background: #4338ca;
+    outline:none;
+  }
+
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 16px;
+    vertical-align: middle;
+  }
+  th {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #a5b4fc;
+    user-select: none;
+  }
+  td {
+    background: #1e293b;
+    border-radius: 12px;
+    color: #e0e7ff;
+  }
+  tr td:last-child {
+    text-align: center;
+  }
+  .action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #a5b4fc;
+    font-size: 20px;
+    margin: 0 8px;
+    transition: color 0.3s ease;
+  }
+  .action-btn:hover {
+    color: #6366f1;
+  }
+
+  /* Responsive table helper */
+  @media(max-width:640px) {
+    table {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Toast notification container */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 3000;
+  }
+  .toast {
+    background: #1e293b;
+    color: #e0e7ff;
+    min-width: 280px;
+    max-width: 360px;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    animation: slide-in-right 0.4s ease forwards;
+    user-select: none;
+  }
+  .toast-success {
+    border-left: 5px solid #4ade80;
+  }
+  .toast-error {
+    border-left: 5px solid #ef4444;
+  }
+  .toast .material-icons {
+    font-size: 28px;
+  }
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    } to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 4000;
+  }
+  .modal {
+    background: rgba(30,41,59,0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 32px 36px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: 0 8px 48px rgba(99, 102, 241, 0.7);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-header h2 {
+    margin: 0;
+    color: #a5b4fc;
+  }
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    font-size: 28px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    padding: 0;
+  }
+  .modal-close-btn:hover {
+    color: #6366f1;
+  }
+
+  /* Map container */
+  .map-container {
+    height: 320px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    margin-top: 16px;
+  }
+
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" aria-label="Logo Khách sạn sang trọng" tabindex="0">LuxHotel</div>
+  <nav>
+    <button id="sidebarToggle" aria-label="Mở/tắt thanh bên" title="Mở/tắt thanh bên">
+      <span class="material-icons">menu</span>
+    </button>
+    <button id="btnLogout" aria-label="Đăng xuất" title="Đăng xuất">
+      <span class="material-icons">logout</span>
+    </button>
+  </nav>
+</header>
+
+<div class="app-container">
+  <aside class="sidebar" aria-label="Thanh điều hướng chính">
+    <h2>Quản Lý</h2>
+    <ul class="nav-list" role="menu" aria-orientation="vertical" tabindex="0">
+      <li><button class="nav-btn active" data-page="dashboard" role="menuitem" tabindex="-1"><span class="material-icons" aria-hidden="true">dashboard</span>Dashboard</button></li>
+      <li><button class="nav-btn" data-page="rooms" role="menuitem" tabindex="-1"><span class="material-icons" aria-hidden="true">hotel</span>Quản lý phòng</button></li>
+      <li><button class="nav-btn" data-page="bookings" role="menuitem" tabindex="-1"><span class="material-icons" aria-hidden="true">event_available</span>Quản lý đặt phòng <span class="badge" id="bookingCount">0</span></button></li>
+      <li><button class="nav-btn" data-page="customers" role="menuitem" tabindex="-1"><span class="material-icons" aria-hidden="true">people</span>Quản lý khách hàng</button></li>
+      <li><button class="nav-btn" data-page="services" role="menuitem" tabindex="-1"><span class="material-icons" aria-hidden="true">room_service</span>Dịch vụ</button></li>
+      <li><button class="nav-btn" data-page="hotelInfo" role="menuitem" tabindex="-1"><span class="material-icons" aria-hidden="true">info</span>Giới thiệu khách sạn</button></li>
+      <li><button class="nav-btn" data-page="map" role="menuitem" tabindex="-1"><span class="material-icons" aria-hidden="true">location_on</span>Vị trí bản đồ</button></li>
+      <li><button class="nav-btn" data-page="reviews" role="menuitem" tabindex="-1"><span class="material-icons" aria-hidden="true">rate_review</span>Đánh giá khách hàng</button></li>
+      <li><button class="nav-btn" data-page="login" role="menuitem" tabindex="-1" style="display:none;"><span class="material-icons" aria-hidden="true">login</span>Đăng nhập</button></li>
+    </ul>
+  </aside>
+
+  <main aria-live="polite" tabindex="0">
+    <!-- Dynamic page content will appear here -->
+  </main>
+</div>
+<footer>
+  &copy; 2024 LuxHotel - Tất cả quyền được bảo lưu. Liên hệ: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="96fff8f0f9d6fae3eefef9e2f3fab8e0f8">[email&#160;protected]</a> | Hotline: 1900 123 456
+</footer>
+
+<div class="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  'use strict';
+
+  // Data stores in localStorage simulation
+  const STORAGE_KEYS = {
+    users: 'luxhotel-users',
+    rooms: 'luxhotel-rooms',
+    bookings: 'luxhotel-bookings',
+    customers: 'luxhotel-customers',
+    services: 'luxhotel-services',
+    reviews: 'luxhotel-reviews',
+    settings: 'luxhotel-settings',
+    session: 'luxhotel-session'
+  };
+
+  // Sample dummy data creation
+  
+  function generateDummyData() {
+    if (!localStorage.getItem(STORAGE_KEYS.users)) {
+      const users = [
+        {id: 'u1', email: 'admin@luxhotel.vn', name: 'Admin', avatar: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/723d078b-4958-44da-a21f-3634f953ba80.png', role: 'admin', preferences: {}, permissions: ['all'], createdAt: new Date().toISOString(), lastLogin: null},
+        {id: 'u2', email: 'user1@luxhotel.vn', name: 'Nguyễn Văn A', avatar: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/bea1084b-5812-4cd9-a894-1f5908326a29.png', role: 'user', preferences: {}, permissions: [], createdAt: new Date().toISOString(), lastLogin: null}
+      ];
+      localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.rooms)) {
+      const rooms = [
+        {id: 'r101', title: 'Phòng Đơn', description: 'Phòng 1 giường đơn thoáng mát', price: 800000, maxGuests: 1, images: ['https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/ffe7c991-1d4d-4eea-8e58-b5acda8063e4.png'], status: 'available', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()},
+        {id: 'r102', title: 'Phòng Đôi', description: 'Phòng rộng rãi 2 giường đơn', price: 1200000, maxGuests: 2, images: ['https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/b5b60a74-46ea-48ed-8704-f08c32671575.png'], status: 'available', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()},
+        {id: 'r201', title: 'Phòng Suite', description: 'Phòng sang trọng với phòng khách riêng biệt', price: 2200000, maxGuests: 3, images: ['https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/8d13de1d-d21d-470e-8da4-cc4bcaf6d47e.png'], status: 'available', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()}
+      ];
+      localStorage.setItem(STORAGE_KEYS.rooms, JSON.stringify(rooms));
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.bookings)) {
+      localStorage.setItem(STORAGE_KEYS.bookings, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.customers)) {
+      localStorage.setItem(STORAGE_KEYS.customers, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.services)) {
+      const services = [
+        {id:'sv1', title: 'Dịch vụ đưa đón sân bay', price: 500000, description: "Dịch vụ xe đưa đón tiện lợi, nhanh chóng."},
+        {id:'sv2', title: 'Ăn sáng buffet', price: 200000, description: "Buffet sáng phong phú với nhiều món ăn truyền thống."},
+        {id:'sv3', title: 'Spa thư giãn', price: 800000, description: "Dịch vụ spa chuyên nghiệp với nhiều liệu pháp trị liệu."}
+      ];
+      localStorage.setItem(STORAGE_KEYS.services, JSON.stringify(services));
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.reviews)) {
+      const reviews = [
+        {id:'rv1', customerName: 'Trần Thị B', rating: 5, comment: 'Dịch vụ tuyệt vời, phòng sạch và nhân viên thân thiện!', date: new Date().toISOString()},
+        {id:'rv2', customerName: 'Lê Văn C', rating: 4, comment: 'Vị trí khách sạn thuận tiện, sẽ quay lại.', date: new Date().toISOString()}
+      ];
+      localStorage.setItem(STORAGE_KEYS.reviews, JSON.stringify(reviews));
+    }
+  }
+
+  // Utilities
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+
+  // Toast Notifications
+  const toastContainer = $('.toast-container');
+  function showToast(message, type = 'success', duration = 4000) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+
+    toast.innerHTML = `
+      <span class="material-icons" aria-hidden="true">${type === 'success' ? 'check_circle' : 'error'}</span>
+      <div>${message}</div>
+    `;
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('hide');
+      toast.addEventListener('transitionend', () => toast.remove());
+    }, duration);
+  }
+
+  // Session management
+  let currentUser = null;
+  function setCurrentUser(user) {
+    currentUser = user;
+    localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(user));
+    updateUIOnAuth();
+  }
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem(STORAGE_KEYS.session);
+    showToast('Đã đăng xuất', 'success');
+    updateUIOnAuth();
+  }
+  function loadSession() {
+    const session = localStorage.getItem(STORAGE_KEYS.session);
+    if(session) {
+      currentUser = JSON.parse(session);
+    }
+  }
+
+  // Navigation management
+  const navButtons = $$('.nav-btn');
+  const mainContent = document.querySelector('main');
+  function setActiveNav(page) {
+    navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
+  }
+  function updateUIOnAuth() {
+    if(currentUser) {
+      // hide login nav item
+      const loginBtn = $('.nav-btn[data-page="login"]');
+      if(loginBtn) loginBtn.style.display = 'none';
+
+      // show logout button in header
+      $('#btnLogout').style.display = 'inline-block';
+
+      setActiveNav('dashboard');
+      renderPage('dashboard');
+    } else {
+      // Show login nav item
+      const loginBtn = $('.nav-btn[data-page="login"]');
+      if(loginBtn) loginBtn.style.display = 'block';
+
+      $('#btnLogout').style.display = 'none';
+
+      setActiveNav('login');
+      renderPage('login');
+    }
+  }
+
+  // Sidebar toggle for mobile
+  const sidebar = $('.sidebar');
+  const sidebarToggle = $('#sidebarToggle');
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
+
+  // Listen nav clicks
+  navButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      if(button.dataset.page === 'login' && currentUser) {
+        logout();
+        return;
+      }
+      if(sidebar.classList.contains('open')) sidebar.classList.remove('open');
+      setActiveNav(button.dataset.page);
+      renderPage(button.dataset.page);
+    });
+  });
+
+  // Validation helpers
+  function validateEmail(email) {
+    return /^\S+@\S+\.\S+$/.test(email);
+  }
+  function validatePositiveNumber(val) {
+    return !isNaN(val) && parseFloat(val) > 0;
+  }
+  function createErrorElement(message) {
+    const el = document.createElement('div');
+    el.className = 'error-message';
+    el.textContent = message;
+    return el;
+  }
+  function clearErrors(container) {
+    [...container.querySelectorAll('.error-message')].forEach(e => e.remove());
+    [...container.querySelectorAll('.input-error')].forEach(i => i.classList.remove('input-error'));
+  }
+
+  // Data access helpers
+  function getData(key) {
+    const raw = localStorage.getItem(STORAGE_KEYS[key]);
+    return raw ? JSON.parse(raw) : [];
+  }
+  function saveData(key, data) {
+    localStorage.setItem(STORAGE_KEYS[key], JSON.stringify(data));
+  }
+  function generateId(prefix='id') {
+    return prefix + Math.random().toString(36).substr(2, 9);
+  }
+
+  // Pages renderers
+
+  function renderPage(page) {
+    mainContent.innerHTML = '';
+    switch(page) {
+      case 'dashboard': renderDashboard(); break;
+      case 'rooms': renderRooms(); break;
+      case 'bookings': renderBookings(); break;
+      case 'customers': renderCustomers(); break;
+      case 'services': renderServices(); break;
+      case 'hotelInfo': renderHotelInfo(); break;
+      case 'map': renderMap(); break;
+      case 'reviews': renderReviews(); break;
+      case 'login': renderLogin(); break;
+      default: mainContent.textContent = 'Trang không tồn tại'; 
+    }
+  }
+
+  // --- Page: Login ---
+  function renderLogin() {
+    mainContent.innerHTML = `
+      <section class="card" aria-label="Đăng nhập">
+        <h2 class="page-title">Đăng nhập</h2>
+        <form id="formLogin" novalidate>
+          <div class="form-group">
+            <label for="emailLogin">Email</label>
+            <input type="email" id="emailLogin" name="email" required autocomplete="username" placeholder="Email của bạn" />
+          </div>
+          <div class="form-group">
+            <label for="passwordLogin">Mật khẩu</label>
+            <input type="password" id="passwordLogin" name="password" required autocomplete="current-password" placeholder="Mật khẩu" />
+          </div>
+          <button class="btn" type="submit">Đăng nhập</button>
+        </form>
+      </section>
+    `;
+
+    const formLogin = $('#formLogin');
+    formLogin.addEventListener('submit', e => {
+      e.preventDefault();
+      clearErrors(formLogin);
+      const email = formLogin.email.value.trim();
+      const password = formLogin.password.value.trim();
+
+      let hasError = false;
+      if(!email) {
+        const err = createErrorElement('Email không được để trống');
+        formLogin.email.classList.add('input-error');
+        formLogin.email.parentElement.appendChild(err);
+        hasError = true;
+      } else if(!validateEmail(email)) {
+        const err = createErrorElement('Email không hợp lệ');
+        formLogin.email.classList.add('input-error');
+        formLogin.email.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(!password) {
+        const err = createErrorElement('Mật khẩu không được để trống');
+        formLogin.password.classList.add('input-error');
+        formLogin.password.parentElement.appendChild(err);
+        hasError = true;
+      }
+
+      if(hasError) return;
+
+      const users = getData('users');
+      const foundUser = users.find(u => u.email === email);
+      if(foundUser) {
+        // For demo, accept any password for existing user
+        setCurrentUser(foundUser);
+        showToast('Đăng nhập thành công!', 'success');
+      } else {
+        showToast('Email hoặc mật khẩu không đúng', 'error');
+      }
+    });
+  }
+
+  // --- Page: Dashboard ---
+  function renderDashboard() {
+    mainContent.innerHTML = `
+      <h1 class="page-title">Bảng Điều Khiển</h1>
+      <section class="card" aria-label="Tổng quan khách sạn">
+        <h3>Tổng quan</h3>
+        <div style="display:flex; gap: 24px; flex-wrap: wrap;">
+          <div style="flex:1; min-width: 160px; background:#4f46e5; border-radius:16px; padding:20px; box-shadow: 0 8px 24px #4f46e5aa;">
+            <h4>Phòng hiện có</h4>
+            <div id="totalRooms" style="font-size: 2.5rem; font-weight: 900;">0</div>
+          </div>
+          <div style="flex:1; min-width: 160px; background:#2563eb; border-radius:16px; padding:20px; box-shadow: 0 8px 24px #2563ebaa;">
+            <h4>Đặt phòng</h4>
+            <div id="totalBookings" style="font-size: 2.5rem; font-weight: 900;">0</div>
+          </div>
+          <div style="flex:1; min-width: 160px; background:#14b8a6; border-radius:16px; padding:20px; box-shadow: 0 8px 24px #14b8a6aa;">
+            <h4>Khách hàng</h4>
+            <div id="totalCustomers" style="font-size: 2.5rem; font-weight: 900;">0</div>
+          </div>
+          <div style="flex:1; min-width: 160px; background:#db2777; border-radius:16px; padding:20px; box-shadow: 0 8px 24px #db2777aa;">
+            <h4>Dịch vụ</h4>
+            <div id="totalServices" style="font-size: 2.5rem; font-weight: 900;">0</div>
+          </div>
+        </div>
+      </section>
+    `;
+    updateDashboardStats();
+  }
+  function updateDashboardStats() {
+    const rooms = getData('rooms');
+    const bookings = getData('bookings');
+    const customers = getData('customers');
+    const services = getData('services');
+
+    $('#totalRooms').textContent = rooms.length;
+    $('#totalBookings').textContent = bookings.length;
+    $('#totalCustomers').textContent = customers.length;
+    $('#totalServices').textContent = services.length;
+
+    const bookingCountBadge = $('#bookingCount');
+    bookingCountBadge.textContent = bookings.length;
+  }
+
+  // --- Page: Rooms ---
+  function renderRooms() {
+    const rooms = getData('rooms');
+    mainContent.innerHTML = `
+      <h1 class="page-title">Quản Lý Phòng</h1>
+      <section class="card">
+        <button class="btn" id="btnAddRoom" aria-label="Thêm phòng mới" title="Thêm phòng mới">
+          <span class="material-icons" aria-hidden="true">add</span> Thêm Phòng
+        </button>
+        <table aria-label="Danh sách phòng" role="grid" tabindex="0" aria-rowcount="${rooms.length + 1}">
+          <thead>
+            <tr>
+              <th>Tên Phòng</th>
+              <th>Mô Tả</th>
+              <th>Giá (VNĐ)</th>
+              <th>Số Người</th>
+              <th>Trạng Thái</th>
+              <th style="text-align:center;">Hình Ảnh</th>
+              <th style="text-align:center;">Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rooms.map(room => `
+            <tr data-id="${room.id}">
+              <td>${room.title}</td>
+              <td>${room.description}</td>
+              <td>${room.price.toLocaleString()}</td>
+              <td>${room.maxGuests}</td>
+              <td>${room.status === 'available' ? 'Có sẵn' : 'Đã đặt'}</td>
+              <td style="text-align:center;"><img src="${room.images[0]}" alt="Hình ảnh phòng ${room.title}" width="120" height="68" loading="lazy" onerror="this.src='https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/14cd4e88-9638-4370-89ea-ec772a8622c7.png'" /></td>
+              <td style="text-align:center;">
+                <button class="action-btn edit-room" aria-label="Chỉnh sửa phòng ${room.title}" title="Chỉnh sửa"><span class="material-icons">edit</span></button>
+                <button class="action-btn delete-room" aria-label="Xóa phòng ${room.title}" title="Xóa"><span class="material-icons">delete</span></button>
+              </td>
+            </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </section>
+      <div id="roomModalContainer"></div>
+    `;
+
+    $('#btnAddRoom').addEventListener('click', openRoomModal);
+
+    // Edit and delete buttons
+    $$('.edit-room').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        const id = tr.getAttribute('data-id');
+        openRoomModal(id);
+      });
+    });
+    $$('.delete-room').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        const id = tr.getAttribute('data-id');
+        if(confirm('Bạn có chắc muốn xóa phòng này?')) {
+          deleteRoom(id);
+        }
+      });
+    });
+  }
+  function openRoomModal(roomId) {
+    const rooms = getData('rooms');
+    const editing = roomId ? rooms.find(r => r.id === roomId) : null;
+
+    const modalHtml = `
+      <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 id="modalTitle">${editing ? 'Sửa Phòng' : 'Thêm Phòng Mới'}</h2>
+            <button type="button" class="modal-close-btn" aria-label="Đóng cửa sổ">&times;</button>
+          </div>
+          <form id="formRoom" novalidate>
+            <div class="form-group">
+              <label for="roomTitle">Tên Phòng</label>
+              <input type="text" id="roomTitle" name="title" placeholder="Tên phòng" value="${editing ? editing.title : ''}" required />
+            </div>
+            <div class="form-group">
+              <label for="roomDescription">Mô Tả</label>
+              <textarea id="roomDescription" name="description" rows="3" placeholder="Mô tả chi tiết">${editing ? editing.description : ''}</textarea>
+            </div>
+            <div class="form-group">
+              <label for="roomPrice">Giá (VNĐ)</label>
+              <input type="number" id="roomPrice" name="price" min="0" placeholder="Giá mỗi đêm" value="${editing ? editing.price : ''}" required />
+            </div>
+            <div class="form-group">
+              <label for="roomMaxGuests">Số Người Tối Đa</label>
+              <input type="number" id="roomMaxGuests" name="maxGuests" min="1" max="10" placeholder="Số khách tối đa" value="${editing ? editing.maxGuests : 1}" required />
+            </div>
+            <div class="form-group">
+              <label for="roomStatus">Trạng Thái</label>
+              <select id="roomStatus" name="status" required>
+                <option value="available" ${editing && editing.status === 'available' ? 'selected' : ''}>Có sẵn</option>
+                <option value="booked" ${editing && editing.status === 'booked' ? 'selected' : ''}>Đã đặt</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="roomImage">URL Hình Ảnh</label>
+              <input type="url" id="roomImage" name="image" placeholder="https://..." value="${editing && editing.images.length > 0 ? editing.images[0] : ''}" />
+            </div>
+            <button type="submit" class="btn">${editing ? 'Cập nhật' : 'Thêm phòng'}</button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    const container = $('#roomModalContainer');
+    container.innerHTML = modalHtml;
+    const modalOverlay = container.querySelector('.modal-overlay');
+    const formRoom = container.querySelector('#formRoom');
+    const btnClose = container.querySelector('.modal-close-btn');
+
+    btnClose.addEventListener('click', closeRoomModal);
+    modalOverlay.addEventListener('click', e => {
+      if(e.target === modalOverlay) closeRoomModal();
+    });
+
+    formRoom.addEventListener('submit', e => {
+      e.preventDefault();
+      clearErrors(formRoom);
+      const data = {
+        title: formRoom.title.value.trim(),
+        description: formRoom.description.value.trim(),
+        price: parseFloat(formRoom.price.value),
+        maxGuests: parseInt(formRoom.maxGuests.value),
+        status: formRoom.status.value,
+        images: formRoom.image.value.trim() ? [formRoom.image.value.trim()] : ['https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/30a2390c-5ec8-4ea4-980e-822492dfe4e3.png']
+      };
+
+      let hasError = false;
+      if(!data.title) {
+        const err = createErrorElement('Tên phòng không được để trống');
+        formRoom.title.classList.add('input-error');
+        formRoom.title.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(!validatePositiveNumber(data.price)) {
+        const err = createErrorElement('Giá phải là số dương');
+        formRoom.price.classList.add('input-error');
+        formRoom.price.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(isNaN(data.maxGuests) || data.maxGuests < 1) {
+        const err = createErrorElement('Số người tối đa phải lớn hơn 0');
+        formRoom.maxGuests.classList.add('input-error');
+        formRoom.maxGuests.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(hasError) return;
+
+      if(editing) {
+        updateRoom(editing.id, data);
+      } else {
+        addRoom(data);
+      }
+    });
+  }
+  function closeRoomModal() {
+    $('#roomModalContainer').innerHTML = '';
+  }
+  function addRoom(data) {
+    const rooms = getData('rooms');
+    const newRoom = {...data, id: generateId('r'), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()};
+    rooms.push(newRoom);
+    saveData('rooms', rooms);
+    showToast('Thêm phòng thành công', 'success');
+    closeRoomModal();
+    renderRooms();
+    updateDashboardStats();
+  }
+  function updateRoom(id, data) {
+    const rooms = getData('rooms');
+    const index = rooms.findIndex(r => r.id === id);
+    if(index !== -1) {
+      rooms[index] = {...rooms[index], ...data, updatedAt: new Date().toISOString()};
+      saveData('rooms', rooms);
+      showToast('Cập nhật phòng thành công', 'success');
+      closeRoomModal();
+      renderRooms();
+      updateDashboardStats();
+    } else {
+      showToast('Phòng không tồn tại', 'error');
+    }
+  }
+  function deleteRoom(id) {
+    let rooms = getData('rooms');
+    rooms = rooms.filter(r => r.id !== id);
+    saveData('rooms', rooms);
+    showToast('Xóa phòng thành công', 'success');
+    renderRooms();
+    updateDashboardStats();
+  }
+
+  // --- Page: Bookings ---
+  function renderBookings() {
+    const bookings = getData('bookings');
+    const rooms = getData('rooms');
+    mainContent.innerHTML = `
+      <h1 class="page-title">Quản Lý Đặt Phòng</h1>
+      <section class="card">
+        <button class="btn" id="btnAddBooking" aria-label="Thêm đặt phòng mới" title="Thêm đặt phòng mới">
+          <span class="material-icons" aria-hidden="true">add</span> Thêm Đặt Phòng
+        </button>
+        <table aria-label="Danh sách đặt phòng" role="grid" tabindex="0" aria-rowcount="${bookings.length + 1}">
+          <thead>
+            <tr>
+              <th>Khách Hàng</th>
+              <th>Phòng</th>
+              <th>Ngày Đến</th>
+              <th>Ngày Đi</th>
+              <th>Tiền Thanh Toán (VNĐ)</th>
+              <th>Trạng Thái</th>
+              <th style="text-align:center;">Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bookings.length === 0 ? `
+            <tr><td colspan="7" style="text-align:center;">Chưa có đặt phòng</td></tr>
+            ` : bookings.map(b => {
+              const room = rooms.find(r => r.id === b.roomId);
+              return `
+              <tr data-id="${b.id}">
+                <td>${b.customerName}</td>
+                <td>${room ? room.title : 'Phòng không tồn tại'}</td>
+                <td>${b.dateFrom}</td>
+                <td>${b.dateTo}</td>
+                <td>${b.paymentAmount.toLocaleString()}</td>
+                <td>${b.status}</td>
+                <td style="text-align:center;">
+                  <button class="action-btn edit-booking" aria-label="Chỉnh sửa đặt phòng" title="Chỉnh sửa"><span class="material-icons">edit</span></button>
+                  <button class="action-btn delete-booking" aria-label="Xóa đặt phòng" title="Xóa"><span class="material-icons">delete</span></button>
+                </td>
+              </tr>`
+            }).join('')}
+          </tbody>
+        </table>
+      </section>
+      <div id="bookingModalContainer"></div>
+    `;
+
+    $('#btnAddBooking').addEventListener('click', openBookingModal);
+
+    $$('.edit-booking').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        const id = tr.getAttribute('data-id');
+        openBookingModal(id);
+      });
+    });
+    $$('.delete-booking').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        const id = tr.getAttribute('data-id');
+        if(confirm('Bạn có chắc muốn xóa đặt phòng này?')) {
+          deleteBooking(id);
+        }
+      });
+    });
+  }
+  function openBookingModal(bookingId) {
+    const bookings = getData('bookings');
+    const rooms = getData('rooms');
+    const customers = getData('customers');
+    const editing = bookingId ? bookings.find(b => b.id === bookingId) : null;
+
+    const modalHtml = `
+      <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 id="bookingModalTitle">${editing ? 'Sửa đặt phòng' : 'Thêm đặt phòng mới'}</h2>
+            <button type="button" class="modal-close-btn" aria-label="Đóng cửa sổ">&times;</button>
+          </div>
+          <form id="formBooking" novalidate>
+            <div class="form-group">
+              <label for="bookingCustomer">Khách hàng</label>
+              <select id="bookingCustomer" name="customerId" required>
+                <option value="">Chọn khách hàng</option>
+                ${customers.map(c => `<option value="${c.id}"${editing && editing.customerId === c.id ? ' selected' : ''}>${c.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bookingRoom">Phòng</label>
+              <select id="bookingRoom" name="roomId" required>
+                <option value="">Chọn phòng</option>
+                ${rooms.filter(r => r.status === 'available' || (editing && editing.roomId === r.id)).map(r => `<option value="${r.id}"${editing && editing.roomId === r.id ? ' selected' : ''}>${r.title}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bookingDateFrom">Ngày Đến</label>
+              <input type="date" id="bookingDateFrom" name="dateFrom" value="${editing ? editing.dateFrom : ''}" required />
+            </div>
+            <div class="form-group">
+              <label for="bookingDateTo">Ngày Đi</label>
+              <input type="date" id="bookingDateTo" name="dateTo" value="${editing ? editing.dateTo : ''}" required />
+            </div>
+            <div class="form-group">
+              <label for="bookingStatus">Trạng thái</label>
+              <select id="bookingStatus" name="status" required>
+                <option value="pending" ${editing && editing.status === 'pending' ? 'selected' : ''}>Chờ xác nhận</option>
+                <option value="confirmed" ${editing && editing.status === 'confirmed' ? 'selected' : ''}>Đã xác nhận</option>
+                <option value="canceled" ${editing && editing.status === 'canceled' ? 'selected' : ''}>Hủy đặt</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bookingPayment">Số tiền thanh toán (VNĐ)</label>
+              <input type="number" min="0" id="bookingPayment" name="paymentAmount" value="${editing ? editing.paymentAmount : ''}" placeholder="Nhập số tiền" required />
+            </div>
+            <button type="submit" class="btn">${editing ? 'Cập nhật' : 'Tạo đặt phòng'}</button>
+          </form>
+        </div>
+      </div>    
+    `;
+
+    const container = $('#bookingModalContainer');
+    container.innerHTML = modalHtml;
+
+    const modalOverlay = container.querySelector('.modal-overlay');
+    const formBooking = container.querySelector('#formBooking');
+    const btnClose = container.querySelector('.modal-close-btn');
+
+    btnClose.addEventListener('click', closeBookingModal);
+    modalOverlay.addEventListener('click', e => {
+      if(e.target === modalOverlay) closeBookingModal();
+    });
+
+    formBooking.addEventListener('submit', e => {
+      e.preventDefault();
+      clearErrors(formBooking);
+      const data = {
+        customerId: formBooking.customerId.value,
+        customerName: customers.find(c => c.id === formBooking.customerId.value)?.name || '',
+        roomId: formBooking.roomId.value,
+        dateFrom: formBooking.dateFrom.value,
+        dateTo: formBooking.dateTo.value,
+        status: formBooking.status.value,
+        paymentAmount: parseFloat(formBooking.paymentAmount.value),
+      };
+
+      let hasError = false;
+      if(!data.customerId) {
+        const err = createErrorElement('Vui lòng chọn khách hàng');
+        formBooking.customerId.classList.add('input-error');
+        formBooking.customerId.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(!data.roomId) {
+        const err = createErrorElement('Vui lòng chọn phòng');
+        formBooking.roomId.classList.add('input-error');
+        formBooking.roomId.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(!data.dateFrom) {
+        const err = createErrorElement('Vui lòng chọn ngày đến');
+        formBooking.dateFrom.classList.add('input-error');
+        formBooking.dateFrom.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(!data.dateTo) {
+        const err = createErrorElement('Vui lòng chọn ngày đi');
+        formBooking.dateTo.classList.add('input-error');
+        formBooking.dateTo.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(data.dateFrom && data.dateTo && new Date(data.dateTo) < new Date(data.dateFrom)) {
+        const err = createErrorElement('Ngày đi phải sau ngày đến');
+        formBooking.dateTo.classList.add('input-error');
+        formBooking.dateTo.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(isNaN(data.paymentAmount) || data.paymentAmount < 0) {
+        const err = createErrorElement('Số tiền thanh toán không hợp lệ');
+        formBooking.paymentAmount.classList.add('input-error');
+        formBooking.paymentAmount.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(hasError) return;
+
+      if(editing) {
+        updateBooking(editing.id, data);
+      } else {
+        addBooking(data);
+      }
+    });
+  }
+  function closeBookingModal() {
+    $('#bookingModalContainer').innerHTML = '';
+  }
+  function addBooking(data) {
+    // Save booking and mark room booked
+    const bookings = getData('bookings');
+    const rooms = getData('rooms');
+    const newBooking = {...data, id: generateId('b'), createdAt: new Date().toISOString()};
+    bookings.push(newBooking);
+    saveData('bookings', bookings);
+
+    // Update room status to booked
+    const roomIndex = rooms.findIndex(r => r.id === data.roomId);
+    if(roomIndex !== -1) {
+      rooms[roomIndex].status = 'booked';
+      saveData('rooms', rooms);
+    }
+
+    showToast('Tạo đặt phòng thành công', 'success');
+    closeBookingModal();
+    renderBookings();
+    updateDashboardStats();
+  }
+  function updateBooking(id, data) {
+    const bookings = getData('bookings');
+    const rooms = getData('rooms');
+    const index = bookings.findIndex(b => b.id === id);
+    if(index !== -1) {
+      // If room changed, update old and new room status
+      if(bookings[index].roomId !== data.roomId) {
+        const oldRoomIndex = rooms.findIndex(r => r.id === bookings[index].roomId);
+        if(oldRoomIndex !== -1) {
+          rooms[oldRoomIndex].status = 'available';
+        }
+        const newRoomIndex = rooms.findIndex(r => r.id === data.roomId);
+        if(newRoomIndex !== -1) {
+          rooms[newRoomIndex].status = 'booked';
+        }
+        saveData('rooms', rooms);
+      }
+      bookings[index] = {...bookings[index], ...data, updatedAt: new Date().toISOString()};
+      saveData('bookings', bookings);
+      showToast('Cập nhật đặt phòng thành công', 'success');
+      closeBookingModal();
+      renderBookings();
+      updateDashboardStats();
+    } else {
+      showToast('Đặt phòng không tồn tại', 'error');
+    }
+  }
+  function deleteBooking(id) {
+    let bookings = getData('bookings');
+    const rooms = getData('rooms');
+    const bookingToDelete = bookings.find(b => b.id === id);
+    if(bookingToDelete) {
+      // Update room status to available if it was booked
+      const roomIndex = rooms.findIndex(r => r.id === bookingToDelete.roomId);
+      if(roomIndex !== -1) {
+        rooms[roomIndex].status = 'available';
+        saveData('rooms', rooms);
+      }
+    }
+    bookings = bookings.filter(b => b.id !== id);
+    saveData('bookings', bookings);
+    showToast('Xóa đặt phòng thành công', 'success');
+    renderBookings();
+    updateDashboardStats();
+  }
+
+  // --- Page: Customers ---
+  function renderCustomers() {
+    const customers = getData('customers');
+    mainContent.innerHTML = `
+      <h1 class="page-title">Quản Lý Khách Hàng</h1>
+      <section class="card">
+        <button class="btn" id="btnAddCustomer" aria-label="Thêm khách hàng mới" title="Thêm khách hàng mới">
+          <span class="material-icons" aria-hidden="true">add</span> Thêm Khách Hàng
+        </button>
+        <table aria-label="Danh sách khách hàng" role="grid" tabindex="0" aria-rowcount="${customers.length + 1}">
+          <thead>
+            <tr>
+              <th>Họ Tên</th>
+              <th>Email</th>
+              <th>Số Điện Thoại</th>
+              <th style="text-align:center;">Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${customers.length === 0 ? `
+            <tr><td colspan="4" style="text-align:center;">Chưa có khách hàng</td></tr>
+          ` : customers.map(c => `
+            <tr data-id="${c.id}">
+              <td>${c.name}</td>
+              <td>${c.email}</td>
+              <td>${c.phone || '-'}</td>
+              <td style="text-align:center;">
+                <button class="action-btn edit-customer" aria-label="Chỉnh sửa khách hàng ${c.name}" title="Chỉnh sửa"><span class="material-icons">edit</span></button>
+                <button class="action-btn delete-customer" aria-label="Xóa khách hàng ${c.name}" title="Xóa"><span class="material-icons">delete</span></button>
+              </td>
+            </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </section>
+      <div id="customerModalContainer"></div>
+    `;
+
+    $('#btnAddCustomer').addEventListener('click', openCustomerModal);
+
+    $$('.edit-customer').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        const id = tr.getAttribute('data-id');
+        openCustomerModal(id);
+      });
+    });
+    $$('.delete-customer').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        const id = tr.getAttribute('data-id');
+        if(confirm('Bạn có chắc muốn xóa khách hàng này?')) {
+          deleteCustomer(id);
+        }
+      });
+    });
+  }
+  function openCustomerModal(customerId) {
+    const customers = getData('customers');
+    const editing = customerId ? customers.find(c => c.id === customerId) : null;
+
+    const modalHtml = `
+      <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 id="customerModalTitle">${editing ? 'Sửa khách hàng' : 'Thêm khách hàng mới'}</h2>
+            <button type="button" class="modal-close-btn" aria-label="Đóng cửa sổ">&times;</button>
+          </div>
+          <form id="formCustomer" novalidate>
+            <div class="form-group">
+              <label for="customerName">Họ Tên</label>
+              <input type="text" id="customerName" name="name" placeholder="Họ tên khách hàng" value="${editing ? editing.name : ''}" required />
+            </div>
+            <div class="form-group">
+              <label for="customerEmail">Email</label>
+              <input type="email" id="customerEmail" name="email" placeholder="Email khách hàng" value="${editing ? editing.email : ''}" required />
+            </div>
+            <div class="form-group">
+              <label for="customerPhone">Số Điện Thoại</label>
+              <input type="tel" id="customerPhone" name="phone" placeholder="Số điện thoại" value="${editing ? editing.phone || '' : ''}" />
+            </div>
+            <button type="submit" class="btn">${editing ? 'Cập nhật' : 'Thêm khách hàng'}</button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    const container = $('#customerModalContainer');
+    container.innerHTML = modalHtml;
+    const modalOverlay = container.querySelector('.modal-overlay');
+    const formCustomer = container.querySelector('#formCustomer');
+    const btnClose = container.querySelector('.modal-close-btn');
+
+    btnClose.addEventListener('click', closeCustomerModal);
+    modalOverlay.addEventListener('click', e => {
+      if(e.target === modalOverlay) closeCustomerModal();
+    });
+
+    formCustomer.addEventListener('submit', e => {
+      e.preventDefault();
+      clearErrors(formCustomer);
+      const data = {
+        name: formCustomer.name.value.trim(),
+        email: formCustomer.email.value.trim(),
+        phone: formCustomer.phone.value.trim(),
+      };
+
+      let hasError = false;
+      if(!data.name) {
+        const err = createErrorElement('Họ tên không được để trống');
+        formCustomer.name.classList.add('input-error');
+        formCustomer.name.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(!data.email) {
+        const err = createErrorElement('Email không được để trống');
+        formCustomer.email.classList.add('input-error');
+        formCustomer.email.parentElement.appendChild(err);
+        hasError = true;
+      } else if(!validateEmail(data.email)) {
+        const err = createErrorElement('Email không hợp lệ');
+        formCustomer.email.classList.add('input-error');
+        formCustomer.email.parentElement.appendChild(err);
+        hasError = true;
+      }
+
+      if(hasError) return;
+
+      if(editing) {
+        updateCustomer(editing.id, data);
+      } else {
+        addCustomer(data);
+      }
+    });
+  }
+  function closeCustomerModal() {
+    $('#customerModalContainer').innerHTML = '';
+  }
+  function addCustomer(data) {
+    const customers = getData('customers');
+    const newCustomer = {...data, id: generateId('c'), createdAt: new Date().toISOString()};
+    customers.push(newCustomer);
+    saveData('customers', customers);
+    showToast('Thêm khách hàng thành công', 'success');
+    closeCustomerModal();
+    renderCustomers();
+    updateDashboardStats();
+  }
+  function updateCustomer(id, data) {
+    const customers = getData('customers');
+    const index = customers.findIndex(c => c.id === id);
+    if(index !== -1) {
+      customers[index] = {...customers[index], ...data, updatedAt: new Date().toISOString()};
+      saveData('customers', customers);
+      showToast('Cập nhật khách hàng thành công', 'success');
+      closeCustomerModal();
+      renderCustomers();
+      updateDashboardStats();
+    } else {
+      showToast('Khách hàng không tồn tại', 'error');
+    }
+  }
+  function deleteCustomer(id) {
+    let customers = getData('customers');
+    customers = customers.filter(c => c.id !== id);
+    saveData('customers', customers);
+    showToast('Xóa khách hàng thành công', 'success');
+    renderCustomers();
+    updateDashboardStats();
+  }
+
+  // --- Page: Services ---
+  function renderServices() {
+    const services = getData('services');
+    mainContent.innerHTML = `
+      <h1 class="page-title">Quản Lý Dịch Vụ</h1>
+      <section class="card">
+        <button class="btn" id="btnAddService" aria-label="Thêm dịch vụ mới" title="Thêm dịch vụ mới">
+          <span class="material-icons" aria-hidden="true">add</span> Thêm Dịch Vụ
+        </button>
+        <table aria-label="Danh sách dịch vụ" role="grid" tabindex="0" aria-rowcount="${services.length + 1}">
+          <thead>
+            <tr>
+              <th>Tên Dịch Vụ</th>
+              <th>Mô Tả</th>
+              <th>Giá (VNĐ)</th>
+              <th style="text-align:center;">Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${services.length === 0 ? `
+            <tr><td colspan="4" style="text-align:center;">Chưa có dịch vụ</td></tr>
+          ` : services.map(s => `
+            <tr data-id="${s.id}">
+              <td>${s.title}</td>
+              <td>${s.description}</td>
+              <td>${s.price.toLocaleString()}</td>
+              <td style="text-align:center;">
+                <button class="action-btn edit-service" aria-label="Chỉnh sửa dịch vụ ${s.title}" title="Chỉnh sửa"><span class="material-icons">edit</span></button>
+                <button class="action-btn delete-service" aria-label="Xóa dịch vụ ${s.title}" title="Xóa"><span class="material-icons">delete</span></button>
+              </td>
+            </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </section>
+      <div id="serviceModalContainer"></div>
+    `;
+
+    $('#btnAddService').addEventListener('click', openServiceModal);
+
+    $$('.edit-service').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        const id = tr.getAttribute('data-id');
+        openServiceModal(id);
+      });
+    });
+    $$('.delete-service').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        const id = tr.getAttribute('data-id');
+        if(confirm('Bạn có chắc muốn xóa dịch vụ này?')) {
+          deleteService(id);
+        }
+      });
+    });
+  }
+  function openServiceModal(serviceId) {
+    const services = getData('services');
+    const editing = serviceId ? services.find(s => s.id === serviceId) : null;
+
+    const modalHtml = `
+      <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="serviceModalTitle">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 id="serviceModalTitle">${editing ? 'Sửa dịch vụ' : 'Thêm dịch vụ mới'}</h2>
+            <button type="button" class="modal-close-btn" aria-label="Đóng cửa sổ">&times;</button>
+          </div>
+          <form id="formService" novalidate>
+            <div class="form-group">
+              <label for="serviceTitle">Tên Dịch Vụ</label>
+              <input type="text" id="serviceTitle" name="title" placeholder="Tên dịch vụ" value="${editing ? editing.title : ''}" required />
+            </div>
+            <div class="form-group">
+              <label for="serviceDescription">Mô Tả</label>
+              <textarea id="serviceDescription" name="description" rows="3" placeholder="Mô tả chi tiết">${editing ? editing.description : ''}</textarea>
+            </div>
+            <div class="form-group">
+              <label for="servicePrice">Giá (VNĐ)</label>
+              <input type="number" id="servicePrice" name="price" min="0" placeholder="Giá dịch vụ" value="${editing ? editing.price : ''}" required />
+            </div>
+            <button type="submit" class="btn">${editing ? 'Cập nhật' : 'Thêm dịch vụ'}</button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    const container = $('#serviceModalContainer');
+    container.innerHTML = modalHtml;
+    const modalOverlay = container.querySelector('.modal-overlay');
+    const formService = container.querySelector('#formService');
+    const btnClose = container.querySelector('.modal-close-btn');
+
+    btnClose.addEventListener('click', closeServiceModal);
+    modalOverlay.addEventListener('click', e => {
+      if(e.target === modalOverlay) closeServiceModal();
+    });
+
+    formService.addEventListener('submit', e => {
+      e.preventDefault();
+      clearErrors(formService);
+      const data = {
+        title: formService.title.value.trim(),
+        description: formService.description.value.trim(),
+        price: parseFloat(formService.price.value),
+      };
+
+      let hasError = false;
+      if(!data.title) {
+        const err = createErrorElement('Tên dịch vụ không được để trống');
+        formService.title.classList.add('input-error');
+        formService.title.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(!validatePositiveNumber(data.price)) {
+        const err = createErrorElement('Giá dịch vụ phải là số dương');
+        formService.price.classList.add('input-error');
+        formService.price.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(hasError) return;
+
+      if(editing) {
+        updateService(editing.id, data);
+      } else {
+        addService(data);
+      }
+    });
+  }
+  function closeServiceModal() {
+    $('#serviceModalContainer').innerHTML = '';
+  }
+  function addService(data) {
+    const services = getData('services');
+    const newService = {...data, id: generateId('sv'), createdAt: new Date().toISOString()};
+    services.push(newService);
+    saveData('services', services);
+    showToast('Thêm dịch vụ thành công', 'success');
+    closeServiceModal();
+    renderServices();
+    updateDashboardStats();
+  }
+  function updateService(id, data) {
+    const services = getData('services');
+    const index = services.findIndex(s => s.id === id);
+    if(index !== -1) {
+      services[index] = {...services[index], ...data, updatedAt: new Date().toISOString()};
+      saveData('services', services);
+      showToast('Cập nhật dịch vụ thành công', 'success');
+      closeServiceModal();
+      renderServices();
+      updateDashboardStats();
+    } else {
+      showToast('Dịch vụ không tồn tại', 'error');
+    }
+  }
+  function deleteService(id) {
+    let services = getData('services');
+    services = services.filter(s => s.id !== id);
+    saveData('services', services);
+    showToast('Xóa dịch vụ thành công', 'success');
+    renderServices();
+    updateDashboardStats();
+  }
+
+  // --- Page: Hotel Info ---
+  function renderHotelInfo() {
+    mainContent.innerHTML = `
+      <h1 class="page-title">Giới Thiệu Khách Sạn</h1>
+      <section class="card" aria-label="Thông tin khách sạn">
+        <p>LuxHotel là khách sạn 5 sao sang trọng tọa lạc tại vị trí đắc địa với tiện nghi hiện đại bậc nhất. Khách sạn có nhiều loại phòng đa dạng, dịch vụ cao cấp và đội ngũ nhân viên tận tâm, chuyên nghiệp.</p>
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/0b0939f4-5045-4ee6-ae61-2945cee08ad8.png" alt="Không gian sang trọng của LuxHotel với bàn ghế hiện đại và đèn chiếu sáng lung linh" style="width: 100%;border-radius: 16px; margin-top: 16px;" loading="lazy" onerror="this.src='https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/239de335-3d4c-4320-9d2d-94a77c930027.png'" />
+        <p style="margin-top: 16px;">Chúng tôi cam kết mang đến cho khách hàng trải nghiệm nghỉ dưỡng hoàn hảo với hàng loạt dịch vụ tiện ích như nhà hàng, spa, phòng gym, hồ bơi ngoài trời, phòng hội nghị và nhiều hơn nữa.</p>
+      </section>
+    `;
+  }
+
+  // --- Page: Map ---
+  function renderMap() {
+    mainContent.innerHTML = `
+      <h1 class="page-title">Vị Trí Bản Đồ</h1>
+      <section class="card" aria-label="Bản đồ vị trí khách sạn">
+        <div class="map-container" id="mapContainer">
+          <iframe width="100%" height="320" loading="lazy" style="border:0" allowfullscreen referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps/embed/v1/place?q=Khách+sạn+LuxHotel,+Hà+Nội,+Việt+Nam&key=AIzaSyD-R8dCm8JVHJKdpdk_olzIe5VetZ9biff" aria-label="Bản đồ chỉ vị trí khách sạn LuxHotel tại Hà Nội Việt Nam">
+          </iframe>
+        </div>
+      </section>
+    `;
+  }
+
+  // --- Page: Reviews ---
+  function renderReviews() {
+    const reviews = getData('reviews');
+    mainContent.innerHTML = `
+      <h1 class="page-title">Đánh Giá Khách Hàng</h1>
+      <section class="card">
+        <button class="btn" id="btnAddReview" aria-label="Thêm đánh giá mới" title="Thêm đánh giá mới">
+          <span class="material-icons" aria-hidden="true">add</span> Thêm Đánh Giá
+        </button>
+        <ul id="reviewsList" style="list-style:none; margin: 0; padding: 0;">
+          ${reviews.length === 0 ? `<li style="text-align:center; padding: 32px;">Chưa có đánh giá</li>` : reviews.map(r => `
+            <li style="background: rgba(99,102,241,0.15); margin-bottom: 20px; border-radius: 16px; padding: 16px 20px;" tabindex="0" aria-label="Đánh giá của khách hàng ${r.customerName}">
+              <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 4px;">
+                <strong style="font-size: 1.125rem;">${r.customerName}</strong>
+                <div style="color:#facc15;">
+                  ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}
+                </div>
+              </div>
+              <p style="font-style: italic; color: #c7d2fe;">${r.comment}</p>
+              <small style="color:#94a3b8;">${new Date(r.date).toLocaleDateString('vi-VN')}</small>
+              <div style="text-align:right; margin-top: 8px;">
+                <button class="action-btn edit-review" aria-label="Chỉnh sửa đánh giá của ${r.customerName}" title="Chỉnh sửa" data-id="${r.id}"><span class="material-icons">edit</span></button>
+                <button class="action-btn delete-review" aria-label="Xóa đánh giá của ${r.customerName}" title="Xóa" data-id="${r.id}"><span class="material-icons">delete</span></button>
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+      </section>
+      <div id="reviewModalContainer"></div>
+    `;
+
+    $('#btnAddReview').addEventListener('click', openReviewModal);
+
+    $$('.edit-review').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const id = e.target.closest('button').getAttribute('data-id');
+        openReviewModal(id);
+      });
+    });
+    $$('.delete-review').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const id = e.target.getAttribute('data-id');
+        if(confirm('Bạn có chắc muốn xóa đánh giá này?')) {
+          deleteReview(id);
+        }
+      });
+    });
+  }
+  function openReviewModal(reviewId) {
+    const reviews = getData('reviews');
+    const editing = reviewId ? reviews.find(r => r.id === reviewId) : null;
+
+    const modalHtml = `
+      <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 id="reviewModalTitle">${editing ? 'Sửa đánh giá' : 'Thêm đánh giá mới'}</h2>
+            <button type="button" class="modal-close-btn" aria-label="Đóng cửa sổ">&times;</button>
+          </div>
+          <form id="formReview" novalidate>
+            <div class="form-group">
+              <label for="reviewCustomerName">Tên Khách Hàng</label>
+              <input type="text" id="reviewCustomerName" name="customerName" placeholder="Tên khách hàng" value="${editing ? editing.customerName : ''}" required />
+            </div>
+            <div class="form-group">
+              <label for="reviewRating">Xếp Hạng</label>
+              <select id="reviewRating" name="rating" required>
+                ${[5,4,3,2,1].map(n => `<option value="${n}"${editing && editing.rating === n ? ' selected' : ''}>${n} sao</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="reviewComment">Ý Kiến</label>
+              <textarea id="reviewComment" name="comment" rows="4" placeholder="Ý kiến khách hàng" required>${editing ? editing.comment : ''}</textarea>
+            </div>
+            <button type="submit" class="btn">${editing ? 'Cập nhật' : 'Thêm đánh giá'}</button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    const container = $('#reviewModalContainer');
+    container.innerHTML = modalHtml;
+    const modalOverlay = container.querySelector('.modal-overlay');
+    const formReview = container.querySelector('#formReview');
+    const btnClose = container.querySelector('.modal-close-btn');
+
+    btnClose.addEventListener('click', closeReviewModal);
+    modalOverlay.addEventListener('click', e => {
+      if(e.target === modalOverlay) closeReviewModal();
+    });
+
+    formReview.addEventListener('submit', e => {
+      e.preventDefault();
+      clearErrors(formReview);
+      const data = {
+        customerName: formReview.customerName.value.trim(),
+        rating: parseInt(formReview.rating.value),
+        comment: formReview.comment.value.trim(),
+        date: new Date().toISOString()
+      };
+
+      let hasError = false;
+      if(!data.customerName) {
+        const err = createErrorElement('Tên khách hàng không được để trống');
+        formReview.customerName.classList.add('input-error');
+        formReview.customerName.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(!data.comment) {
+        const err = createErrorElement('Ý kiến không được để trống');
+        formReview.comment.classList.add('input-error');
+        formReview.comment.parentElement.appendChild(err);
+        hasError = true;
+      }
+      if(isNaN(data.rating) || data.rating < 1 || data.rating > 5) {
+        const err = createErrorElement('Xếp hạng không hợp lệ');
+        formReview.rating.classList.add('input-error');
+        formReview.rating.parentElement.appendChild(err);
+        hasError = true;
+      }
+
+      if(hasError) return;
+
+      if(editing) {
+        updateReview(editing.id, data);
+      } else {
+        addReview(data);
+      }
+    });
+  }
+  function closeReviewModal() {
+    $('#reviewModalContainer').innerHTML = '';
+  }
+  function addReview(data) {
+    const reviews = getData('reviews');
+    const newReview = {...data, id: generateId('rv')};
+    reviews.push(newReview);
+    saveData('reviews', reviews);
+    showToast('Thêm đánh giá thành công', 'success');
+    closeReviewModal();
+    renderReviews();
+  }
+  function updateReview(id, data) {
+    const reviews = getData('reviews');
+    const index = reviews.findIndex(r => r.id === id);
+    if(index !== -1) {
+      reviews[index] = {...reviews[index], ...data};
+      saveData('reviews', reviews);
+      showToast('Cập nhật đánh giá thành công', 'success');
+      closeReviewModal();
+      renderReviews();
+    } else {
+      showToast('Đánh giá không tồn tại', 'error');
+    }
+  }
+  function deleteReview(id) {
+    let reviews = getData('reviews');
+    reviews = reviews.filter(r => r.id !== id);
+    saveData('reviews', reviews);
+    showToast('Xóa đánh giá thành công', 'success');
+    renderReviews();
+  }
+
+  // Initialize app
+  function init() {
+    generateDummyData();
+    loadSession();
+    updateUIOnAuth();
+
+    // Accessibility: focus main content after page change
+    mainContent.addEventListener('DOMSubtreeModified', () => {
+      mainContent.focus();
+    });
+  }
+  init();
+</script>
+</body>
+</html>
+
